@@ -129,6 +129,16 @@ start_anonymous(Config) when is_list(Config) ->
 		test_server:fail(failed_to_start_process)
 	end,
 
+	%% linked info
+	Ref2 = make_ref(),
+	{ok, Pid6, Ref2} = gen_process:start_link(?MODULE, {info, Ref2}, []),
+	ok = gen_process:call(Pid6, {stop, stopped}),
+	receive
+		{'EXIT', Pid6, stopped} -> ok
+	after 5000 ->
+		test_server:fail(not_stopped)
+	end,
+
 	process_flag(trap_exit, OldFlags),
 	ok.
 
@@ -356,6 +366,8 @@ init(stop) ->
 init(sleep) ->
 	test_server:sleep(1000),
 	{ok, []};
+init({info, Info}) ->
+	{ok, [], Info};
 init({state,State}) ->
 	{ok, State}.
 

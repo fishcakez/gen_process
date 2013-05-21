@@ -26,6 +26,7 @@
 -ifndef(no_callbacks).
 -callback init(Args :: term()) ->
 	{ok, StateData :: term()} |
+	{ok, StateData :: term(), Info :: term()} |
 	{stop, Reason :: term()} |
 	ignore.
 -callback process(StateData :: term()) ->
@@ -96,6 +97,9 @@ init_it(Starter, Parent, Name0, Callback, CallbackArgs, Options) ->
 	case catch Callback:init(CallbackArgs) of
 		{ok, CallbackState} ->
 			proc_lib:init_ack(Starter, {ok, self()}),
+			loop(Parent, Name, Callback, CallbackState, Debug);
+		{ok, CallbackState, Info} ->
+			proc_lib:init_ack(Starter, {ok, self(), Info}),
 			loop(Parent, Name, Callback, CallbackState, Debug);
 		{stop, Reason} ->
 			%% For consistency, we must make sure that the
